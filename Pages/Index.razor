@@ -3,6 +3,21 @@
 @inject NavigationManager NavigationManager
 @inject OrderState OrderState
 
+<div class="top-bar">
+  <a class="logo" href="">
+    <img src="img/logo.svg" />
+  </a>
+
+  <NavLink href="" class="nav-tab" Match="NavLinkMatch.All">
+    <img src="img/pizza-slice.svg" />
+    <div>Get Pizza</div>
+  </NavLink>
+
+  <NavLink href="myorders" class="nav-tab">
+    <img src="img/bike.svg" />
+    <div>My Orders</div>
+  </NavLink>
+</div>
 <div class="main">
   <h1>Blazing Pizzas</h1>
   <ul class="pizza-cards">
@@ -10,11 +25,12 @@
     {
       @foreach (var special in specials)
       {
-          <li @onclick="@(() => OrderState.ShowConfigurePizzaDialog(special))" style="background-image: url('@special.ImageUrl')">
+        <li @onclick="@(() => OrderState.ShowConfigurePizzaDialog(special))"
+          style="background-image: url('@special.ImageUrl')">
           <div class="pizza-info">
-          <span class="title">@special.Name</span>
-          @special.Description
-          <span class="price">@special.GetFormattedBasePrice()</span>
+            <span class="title">@special.Name</span>
+            @special.Description
+            <span class="price">@special.GetFormattedBasePrice()</span>
           </div>
         </li>
       }
@@ -24,42 +40,40 @@
 
 @if (OrderState.ShowingConfigureDialog)
 {
-    <ConfigurePizzaDialog
-      Pizza="OrderState.ConfiguringPizza"
-      OnCancel="OrderState.CancelConfigurePizzaDialog"
-      OnConfirm="OrderState.ConfirmConfigurePizzaDialog" />
+  <ConfigurePizzaDialog Pizza="OrderState.ConfiguringPizza" OnCancel="OrderState.CancelConfigurePizzaDialog"
+    OnConfirm="OrderState.ConfirmConfigurePizzaDialog" />
 }
 
 <div class="sidebar">
-    @if (order.Pizzas.Any())
-    {
-        <div class="order-contents">
-            <h2>Your order</h2>
+  @if (order.Pizzas.Any())
+  {
+    <div class="order-contents">
+      <h2>Your order</h2>
 
-            @foreach (var configuredPizza in order.Pizzas)
-            {
-              <div class="cart-item">
-                  <a @onclick="@(() => OrderState.RemoveConfiguredPizza(configuredPizza))" class="delete-item">x</a>
-                  <div class="title">@(configuredPizza.Size)" @configuredPizza.Special.Name</div>
-                  <div class="item-price">
-                      @configuredPizza.GetFormattedTotalPrice()
-                  </div>
-              </div>
-            }
+      @foreach (var configuredPizza in order.Pizzas)
+      {
+        <div class="cart-item">
+          <a @onclick="@(() => OrderState.RemoveConfiguredPizza(configuredPizza))" class="delete-item">x</a>
+          <div class="title">@(configuredPizza.Size)" @configuredPizza.Special.Name</div>
+          <div class="item-price">
+            @configuredPizza.GetFormattedTotalPrice()
+          </div>
         </div>
-    }
-    else
-    {
-        <div class="empty-cart">Choose a pizza<br>to get started</div>
-    }
-
-    <div class="order-total @(order.Pizzas.Any() ? "" : "hidden")">
-        Total:
-        <span class="total-price">@order.GetFormattedTotalPrice()</span>
-        <a href="checkout" class="@(OrderState.Order.Pizzas.Count == 0 ? "btn btn-warning disabled" : "btn btn-warning")">
-            Order >
-        </a>
+      }
     </div>
+  }
+  else
+  {
+    <div class="empty-cart">Choose a pizza<br>to get started</div>
+  }
+
+  <div class="order-total @(order.Pizzas.Any() ? "" : "hidden")">
+    Total:
+    <span class="total-price">@order.GetFormattedTotalPrice()</span>
+    <a href="checkout" class="@(OrderState.Order.Pizzas.Count == 0 ? "btn btn-warning disabled" : "btn btn-warning")">
+      Order >
+    </a>
+  </div>
 </div>
 
 @code {
@@ -68,7 +82,6 @@
 
   protected override async Task OnInitializedAsync()
   {
-      specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
+    specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
   }
 }
-		
