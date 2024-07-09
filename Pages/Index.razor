@@ -2,6 +2,8 @@
 @inject HttpClient HttpClient
 @inject NavigationManager NavigationManager
 @inject OrderState OrderState
+@inject OrderState OrderStatae
+@inject IJSRuntime JavaScript
 
 <div class="main">
   <ul class="pizza-cards">
@@ -10,7 +12,7 @@
       @foreach (var special in specials)
       {
         <li @onclick="@(() => OrderState.ShowConfigurePizzaDialog(special))"
-          style="background-image: url('@special.ImageUrl')">
+      style="background-image: url('@special.ImageUrl')">
           <div class="pizza-info">
             <span class="title">@special.Name</span>
             @special.Description
@@ -25,7 +27,7 @@
 @if (OrderState.ShowingConfigureDialog)
 {
   <ConfigurePizzaDialog Pizza="OrderState.ConfiguringPizza" OnCancel="OrderState.CancelConfigurePizzaDialog"
-    OnConfirm="OrderState.ConfirmConfigurePizzaDialog" />
+  OnConfirm="OrderState.ConfirmConfigurePizzaDialog" />
 }
 
 <div class="sidebar">
@@ -37,7 +39,10 @@
       @foreach (var configuredPizza in order.Pizzas)
       {
         <div class="cart-item">
-          <a @onclick="@(() => OrderState.RemoveConfiguredPizza(configuredPizza))" class="delete-item">x</a>
+          <button type="button" class="close text-danger" aria-label="Close"
+        @onclick="@(async () => await RemovePizzaConfirmation(configuredPizza))">
+            <span aria-hidden="true">&times;</span>
+          </button>
           <div class="title">@(configuredPizza.Size)" @configuredPizza.Special.Name</div>
           <div class="item-price">
             @configuredPizza.GetFormattedTotalPrice()
@@ -67,5 +72,26 @@
   protected override async Task OnInitializedAsync()
   {
     specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
+  }
+
+  async Task RemovePizzaConfirmation(Pizza removePizza)
+  {
+    var messageParams = new
+    {
+      title = "Remove Pizza?",
+      text = $"Do you want to remove the \"{removePizza.Special!.Name}\" from your order?",
+      icon = "warning",
+      buttons = new
+      {
+        abort = new { text = "No, leave it in my order", value = false },
+        confirm = new { text = "Yes, remove pizza", value = true }
+      },
+      dangerMode = true
+    };
+
+    if (await JavaScript.InvokeAsync<bool>("swal", messageParams))
+    {
+      OrderState.RemoveConfiguredPizza(removePizza);
+    }
   }
 }
